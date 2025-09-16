@@ -5,7 +5,7 @@
  * using the SDK with proper error handling, token approvals, and transaction management.
  */
 
-import { createPublicClient, createWalletClient, http, parseUnits, formatUnits, Address } from 'viem';
+import { createPublicClient, createWalletClient, http, parseUnits, formatUnits, formatEther, Address } from 'viem';
 import { polygon, arbitrum, avalanche } from 'viem/chains';
 import { SteerClient } from '@steerprotocol/sdk';
 
@@ -37,6 +37,13 @@ interface DepositResult {
   transactionHash?: string;
   sharesReceived?: bigint;
   error?: string;
+}
+
+interface GasEstimationResult {
+  gasEstimate: bigint | null;
+  willRevert: boolean;
+  error?: string;
+  gasCostInEth?: string;
 }
 
 /**
@@ -254,6 +261,88 @@ export class SmartPoolDepositManager {
       console.error('Failed to prepare deposit:', error);
       throw error;
     }
+  }
+
+  /**
+   * Estimate gas for a prepared deposit transaction
+   */
+  async estimateGasForPreparedTx(preparedTx: any, userAddress: Address): Promise<GasEstimationResult> {
+    try {
+      console.log('🔍 Estimating gas for prepared deposit transaction...');
+      
+      if (!preparedTx || !preparedTx.success || !preparedTx.data) {
+        return {
+          gasEstimate: null,
+          willRevert: true,
+          error: 'Invalid prepared transaction data'
+        };
+      }
+
+      const txData = preparedTx.data;
+
+      // Estimate gas using the public client with the contract call
+      const gasEstimate = await this.publicClient.estimateContractGas({
+        address: txData.address,
+        abi: txData.abi,
+        functionName: txData.functionName,
+        args: txData.args,
+        account: userAddress
+      });
+
+      console.log(`✅ Gas estimation successful: ${gasEstimate.toString()} gas units`);
+      
+      // Calculate gas cost in ETH (assuming 20 gwei gas price)
+      const gasPriceGwei = 20n; // 20 gwei
+      const gasPriceWei = gasPriceGwei * 1000000000n; // Convert to wei
+      const gasCostWei = gasEstimate * gasPriceWei;
+      const gasCostInEth = formatEther(gasCostWei);
+      
+      return {
+        gasEstimate,
+        willRevert: false,
+        gasCostInEth
+      };
+
+    } catch (error: any) {
+      console.error('❌ Gas estimation failed:', error);
+      
+      // Check if the error indicates a revert
+      const willRevert = this.isRevertError(error);
+      
+      return {
+        gasEstimate: null,
+        willRevert,
+        error: error.message || 'Unknown error during gas estimation'
+      };
+    }
+  }
+
+  /**
+   * Check if an error indicates a transaction revert
+   */
+  private isRevertError(error: any): boolean {
+    const revertIndicators = [
+      'execution reverted',
+      'revert',
+      'insufficient funds',
+      'insufficient balance',
+      'transfer amount exceeds balance',
+      'allowance exceeded',
+      'exceeds allowance',
+      'slippage tolerance exceeded',
+      'minimum amount not met',
+      'deadline exceeded'
+    ];
+
+    const errorMessage = error?.message?.toLowerCase() || '';
+    const errorCode = error?.code?.toString() || '';
+    
+    // Check for common revert conditions
+    return revertIndicators.some(indicator => 
+      errorMessage.includes(indicator) || 
+      errorCode.includes('CALL_EXCEPTION') ||
+      errorCode.includes('UNPREDICTABLE_GAS_LIMIT')
+    );
   }
 
   /**
@@ -550,5 +639,5 @@ export class DepositUtils {
 }
 
 // Export types
-export type { DepositParams, DepositResult, TokenInfo, VaultInfo };
+export type { DepositParams, DepositResult, TokenInfo, VaultInfo, GasEstimationResult };
 
