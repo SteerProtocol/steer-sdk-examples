@@ -21,6 +21,35 @@ export class SteerPendingRewardsCalculator {
   }
 
   /**
+   * Prepare transaction object to claim user rewards from a vault
+   * - Calls claimUserRewards() on the vault contract
+   * - No args, nonpayable
+   */
+  async prepareClaimPendingRewardsTx(vaultAddress: Address) {
+    const claimUserRewardsAbi = [
+      {
+        inputs: [],
+        name: 'claimUserRewards',
+        outputs: [
+          { internalType: 'uint256', name: '', type: 'uint256' },
+          { internalType: 'uint256', name: '', type: 'uint256' }
+        ],
+        stateMutability: 'nonpayable',
+        type: 'function'
+      }
+    ] as const;
+
+    const preparedTx = {
+      address: vaultAddress as `0x${string}`,
+      abi: claimUserRewardsAbi,
+      functionName: 'claimUserRewards' as const,
+      args: [] as const
+    };
+
+    return preparedTx;
+  }
+
+  /**
    * Calculate pending rewards for a user from a specific vault
    */
   async calculatePendingRewards(
