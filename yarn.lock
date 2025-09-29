@@ -1428,10 +1428,10 @@
     graphql "^16.8.0"
     graphql-request "^6.1.0"
 
-"@steerprotocol/sdk@1.22.0-test-blackhole-support.2":
-  version "1.22.0-test-blackhole-support.2"
-  resolved "https://registry.npmjs.org/@steerprotocol/sdk/-/sdk-1.22.0-test-blackhole-support.2.tgz#6293180ff1e68deec2dfa6ab0aee7651924cb94f"
-  integrity sha512-9v9y2qlZUIXVbysNof81MSdoFpMReOum6YSUVUDtSIi0f+77bnEgwMnDCz+hD4sn5BxK4Ke/WazMZXc9NPPQmw==
+"@steerprotocol/sdk@1.22.0-test-blackhole-support.4":
+  version "1.22.0-test-blackhole-support.4"
+  resolved "https://registry.npmjs.org/@steerprotocol/sdk/-/sdk-1.22.0-test-blackhole-support.4.tgz#ee8ee4a0b03887deef5d4a9765459d1838bf2379"
+  integrity sha512-o1ZvrJ9orNSO8Nr7owIKoVBQ503teWCAMMY6kvE2LmK8hGr+bQpEMe58O+JXTWxThAUd/NUnHPmtG0/BQrf02Q==
   dependencies:
     "@steerprotocol/api-sdk" "^1.1.2"
     decimal.js "^10.5.0"

@@ -7,7 +7,7 @@
 
 import { createPublicClient, createWalletClient, http, parseUnits, formatUnits, formatEther, Address } from 'viem';
 import { polygon, arbitrum, avalanche } from 'viem/chains';
-import { SteerClient } from '@steerprotocol/sdk';
+import { ChainId, SteerClient } from '@steerprotocol/sdk';
 
 // Type definitions for the deposit process
 interface DepositParams {
@@ -16,6 +16,8 @@ interface DepositParams {
   amount1Desired: bigint;
   slippage: number;
   recipient?: Address;
+  isSteerPeriphery?: boolean;
+  chainId?: number;
 }
 
 interface TokenInfo {
@@ -253,7 +255,9 @@ export class SmartPoolDepositManager {
           amount0Desired: params.amount0Desired,
           amount1Desired: params.amount1Desired,
           slippage: params.slippage,
-          to: params.recipient || '0x0000000000000000000000000000000000000000'
+          to: params.recipient || '0x0000000000000000000000000000000000000000',
+          isSteerPeriphery: params.isSteerPeriphery,
+          chainId: params.chainId
         });
 
       return preparedTx;
@@ -530,7 +534,8 @@ export class SmartPoolDepositExamples {
     vaultAddress: Address,
     tokenInput: bigint,
     isToken0Input: boolean,
-    userAddress: Address
+    userAddress: Address,
+    chainId: number
   ): Promise<void> {
     console.log('\n=== Deposit Example ===');
     console.log('Token 0 Input: ', isToken0Input);
@@ -550,12 +555,27 @@ export class SmartPoolDepositExamples {
           amount0Desired: optimalAmounts.amount0,
           amount1Desired: optimalAmounts.amount1,
           slippage: 0.005,
-          recipient: userAddress
+          recipient: userAddress,
       });
 
       console.log(`📊 Prepared deposit transaction:`);
       console.log(result);
-    
+      
+
+      // deposit through steer periphery
+
+      const resultWithSteerPeriphery = await this.depositManager.prepareDeposit({
+        vaultAddress,
+        amount0Desired: optimalAmounts.amount0,
+        amount1Desired: optimalAmounts.amount1,
+        slippage: 0.005,
+        recipient: userAddress,
+        chainId,
+        isSteerPeriphery: true
+      })
+
+      console.log(`📊 Prepared deposit transaction with steer periphery:`);
+      console.log(resultWithSteerPeriphery);
     }
 
   }
@@ -570,13 +590,14 @@ export class SmartPoolDepositExamples {
     // WAVAX/USDC
     const vaultAddress = '0x5c1d454f08975c554f6b70a84fd8859fbdfcc069';
     const userAddress = '0xCD88431107B72b1a1aa13DE27Ab894e27C7D1a61';
+    const chainId = ChainId.Avalanche;
 
     const token0Input = parseUnits('50', 18); // 1000 WAVAX
-    await this.depositExampleWithTokenInput(vaultAddress, token0Input, true, userAddress);
+    await this.depositExampleWithTokenInput(vaultAddress, token0Input, true, userAddress, chainId);
 
 
     const token1Input = parseUnits('60', 6); // 1000 USDT
-    await this.depositExampleWithTokenInput(vaultAddress, token1Input, false, userAddress);
+    await this.depositExampleWithTokenInput(vaultAddress, token1Input, false, userAddress, chainId);
 
   }
 
