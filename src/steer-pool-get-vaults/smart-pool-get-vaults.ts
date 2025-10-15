@@ -99,6 +99,38 @@ export class SteerVaultManager {
       
       if (result.success && result.data) {
         console.log(`✅ Successfully fetched ${result.data.edges.length} vaults from API`);
+
+        // Loop over each vault and fetch Blackhole APR details
+        for (const edge of result.data.edges) {
+          const vault = edge.node as any;
+          
+          console.log(`\nFetching Blackhole APR details for vault: ${vault.address || vault.id}`);
+          
+          try {
+            const aprDetails = await vaultClient.getBlackholeVaultApr({
+              vaultAddress: vault.address || vault.id,
+              chainId: chainId
+            });
+
+            if (aprDetails.success && aprDetails.data) {
+              console.log(`  ✅ Current APR: ${aprDetails.data.apr.apr}%`);
+              console.log(`  Status: ${aprDetails.data.apr.message}`);
+              
+              // Log snapshot analysis if available
+              if (aprDetails.data.snapshotAnalysis && aprDetails.data.snapshotAnalysis.length > 0) {
+                console.log(`  Historical snapshots: ${aprDetails.data.snapshotAnalysis.length}`);
+                aprDetails.data.snapshotAnalysis.forEach((snapshot: any) => {
+                  console.log(`    Period ${snapshot.period}: ${snapshot.apr}% APR, TVL: $${snapshot.tvlUSD}, Fees: $${snapshot.feesUSD}`);
+                });
+              }
+            } else {
+              console.log(`  ⚠️ Failed to fetch APR details: ${aprDetails.error}`);
+            }
+          } catch (aprError) {
+            console.log(`  ⚠️ Error fetching Blackhole APR: ${aprError}`);
+          }
+        }
+        
         return {
           success: true,
           data: result.data,
