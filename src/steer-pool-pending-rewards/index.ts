@@ -114,8 +114,8 @@ export async function runPendingRewardsExample(): Promise<void> {
     const rewardsCalculator = new SteerPendingRewardsCalculator(publicClient, walletClient);
 
     // Test vault address (replace with actual vault address)
-    const testVaultAddress = '0x5c1d454f08975c554f6b70a84fd8859fbdfcc069' as Address;
-    const userAddress = '0xCD88431107B72b1a1aa13DE27Ab894e27C7D1a61' as Address;
+    const testVaultAddress = '0x616d4cAA488E8FC1215F9cd56e549a74432DC007' as Address;
+    const userAddress = '0x8fcc82987Ba42b98d46F503Dd7235733fa45Ff5d' as Address;
 
     console.log('🚀 Starting Pending Rewards Calculation Example...');
 
